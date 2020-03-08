@@ -1,6 +1,6 @@
 import logging
 
-from telegram import Update
+from telegram import Update, User
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext, PicklePersistence
 
 import SentimentAnalyzer
@@ -12,7 +12,7 @@ logging.basicConfig(level=logging.INFO,
 
 def start(update: Update, context: CallbackContext):
     context.bot.send_message(chat_id=update.effective_chat.id,
-                             text="Привет! Я - Токсикометр замерять токсичность вашего чата.")
+                             text="Привет! Я - Токсикометр и я буду замерять токсичность вашего чата.")
 
 
 def analyse(update: Update, context: CallbackContext):
@@ -25,7 +25,7 @@ def analyse(update: Update, context: CallbackContext):
     toxicity_data.total_toxicity += SentimentAnalyzer.get_sentiment(update.message.text).negative
 
     context.user_data["toxicity"] = toxicity_data
-    context.chat_data[update.message.from_user.username] = toxicity_data
+    context.chat_data[__get_user_key(update.message.from_user)] = toxicity_data
 
 
 def get_top_toxics(update: Update, context: CallbackContext):
@@ -37,30 +37,39 @@ def get_top_toxics(update: Update, context: CallbackContext):
 
 
 def my_toxicity(update: Update, context: CallbackContext):
+    user_key = __get_user_key(update.message.from_user)
     if 'toxicity' not in context.user_data:
         context.bot.send_message(chat_id=update.effective_chat.id,
-                                 text='{0} не токсичен'.format(update.message.from_user.username))
+                                 text='{0} не токсичен'.format(user_key))
         return
     toxicity_data = context.user_data['toxicity']
     context.bot.send_message(chat_id=update.effective_chat.id,
-                             text='{0} токсичен на {1}%'.format(update.message.from_user.username,
+                             text='{0} токсичен на {1}%'.format(user_key,
                                                                 toxicity_data.get_toxic_level()))
 
 
 def my_toxicity_here(update: Update, context: CallbackContext):
+    user_key = __get_user_key(update.message.from_user)
     if update.message.from_user.username not in context.chat_data:
         context.bot.send_message(chat_id=update.effective_chat.id,
-                                 text='{0} не токсичен в этом чате'.format(update.message.from_user.username))
+                                 text='{0} не токсичен в этом чате'.format(user_key))
         return
-    toxicity_data = context.chat_data[update.message.from_user.username]
+    toxicity_data = context.chat_data[user_key]
     context.bot.send_message(chat_id=update.effective_chat.id,
-                             text='{0} токсичен в этом чате на {1}%'.format(update.message.from_user.username,
+                             text='{0} токсичен в этом чате на {1}%'.format(user_key,
                                                                             toxicity_data.get_toxic_level()))
+
+
+def __get_user_key(user: User) -> str:
+    if user.username is not None:
+        return user.username
+    else:
+        return user.first_name + ' ' + (user.last_name or '')
 
 
 def main():
     persistence = PicklePersistence(filename='db')
-    updater = Updater(token='TOKEN', persistence=persistence, use_context=True)
+    updater = Updater(token='1052374518:AAFEyQiZwH1U4Sr9OADy04F3n4Pe089r3F0', persistence=persistence, use_context=True)
     dispatcher = updater.dispatcher
 
     start_handler = CommandHandler('start', start)
