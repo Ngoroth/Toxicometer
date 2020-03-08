@@ -16,16 +16,22 @@ def start(update: Update, context: CallbackContext):
 
 
 def analyse(update: Update, context: CallbackContext):
-    toxicity_data = UserToxicityData()
+    user_global_toxicity_data = UserToxicityData()
+    user_chat_toxicity_data = UserToxicityData()
 
     if "toxicity" in context.user_data:
-        toxicity_data = context.user_data["toxicity"]
+        user_global_toxicity_data = context.user_data["toxicity"]
+    if __get_user_key(update.message.from_user) in context.chat_data:
+        user_chat_toxicity_data = context.chat_data[__get_user_key(update.message.from_user)]
 
-    toxicity_data.messages_count += 1
-    toxicity_data.total_toxicity += SentimentAnalyzer.get_sentiment(update.message.text).negative
+    user_global_toxicity_data.messages_count += 1
+    user_global_toxicity_data.total_toxicity += SentimentAnalyzer.get_sentiment(update.message.text).negative
 
-    context.user_data["toxicity"] = toxicity_data
-    context.chat_data[__get_user_key(update.message.from_user)] = toxicity_data
+    user_chat_toxicity_data.messages_count += 1
+    user_chat_toxicity_data.total_toxicity += SentimentAnalyzer.get_sentiment(update.message.text).negative
+
+    context.user_data["toxicity"] = user_global_toxicity_data
+    context.chat_data[__get_user_key(update.message.from_user)] = user_chat_toxicity_data
 
 
 def get_top_toxics(update: Update, context: CallbackContext):
