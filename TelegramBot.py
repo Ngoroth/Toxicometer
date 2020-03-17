@@ -36,7 +36,7 @@ def analyse(update: Update, context: CallbackContext):
 
 def get_top_toxics(update: Update, context: CallbackContext):
     text = 'Самые токсичные здесь: \n'
-    for i in sorted(context.chat_data.items(), key=lambda ud: ud[1].total_toxicity)[-3:]:
+    for i in sorted(context.chat_data.items(), key=lambda ud: ud[1].get_toxic_level())[-3:]:
         text += i[0] + ' {0}%\n'.format(i[1].get_toxic_level())
     context.bot.send_message(chat_id=update.effective_chat.id,
                              text=text)
