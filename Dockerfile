@@ -27,13 +27,8 @@ RUN apt-get update \
 # Install Python packages
 RUN pip install --upgrade pip \
     && pip install \
-        ipython[all] \
         numpy \
-        nose \
-        matplotlib \
-        pandas \
         scipy \
-        sympy \
         cython \
         dostoevsky \
         python-telegram-bot \
