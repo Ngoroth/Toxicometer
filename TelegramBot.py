@@ -75,7 +75,7 @@ def __get_user_key(user: User) -> str:
 
 def main():
     persistence = PicklePersistence(filename='db')
-    updater = Updater(token='1052374518:AAHWiIfiJa8j-4NsIA7PDPfH3YdrV414tZs', persistence=persistence, use_context=True)
+    updater = Updater(token='TOKEN', persistence=persistence, use_context=True)
     dispatcher = updater.dispatcher
 
     start_handler = CommandHandler('start', start)
