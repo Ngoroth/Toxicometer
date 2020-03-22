@@ -36,8 +36,8 @@ def analyse(update: Update, context: CallbackContext):
 
 def get_top_toxics(update: Update, context: CallbackContext):
     text = 'Самые токсичные здесь: \n'
-    for i in sorted(context.chat_data.items(), key=lambda ud: ud[1].get_toxic_level())[-3:]:
-        text += i[0] + ' {0}%\n'.format(i[1].get_toxic_level())
+    for i in sorted(context.chat_data.items(), key=lambda ud: ud[1].get_toxic_coefficient())[-3:]:
+        text += i[0] + ' {0}\n'.format(i[1].get_toxic_coefficient())
     context.bot.send_message(chat_id=update.effective_chat.id,
                              text=text)
 
@@ -46,24 +46,24 @@ def my_toxicity(update: Update, context: CallbackContext):
     user_key = __get_user_key(update.message.from_user)
     if 'toxicity' not in context.user_data:
         context.bot.send_message(chat_id=update.effective_chat.id,
-                                 text='{0} не токсичен'.format(user_key))
+                                 text='Общий коэффициент токсичности {0} еще не рассчитан'.format(user_key))
         return
     toxicity_data = context.user_data['toxicity']
     context.bot.send_message(chat_id=update.effective_chat.id,
-                             text='{0} токсичен на {1}%'.format(user_key,
-                                                                toxicity_data.get_toxic_level()))
+                             text='Общий коэффициент токсичности {0} равен {1}'.format(user_key,
+                                                                                       toxicity_data.get_toxic_coefficient()))
 
 
 def my_toxicity_here(update: Update, context: CallbackContext):
     user_key = __get_user_key(update.message.from_user)
     if update.message.from_user.username not in context.chat_data:
         context.bot.send_message(chat_id=update.effective_chat.id,
-                                 text='{0} не токсичен в этом чате'.format(user_key))
+                                 text='Коэффициент токсичности {0} в этом чате еще не рассчитан'.format(user_key))
         return
     toxicity_data = context.chat_data[user_key]
     context.bot.send_message(chat_id=update.effective_chat.id,
-                             text='{0} токсичен в этом чате на {1}%'.format(user_key,
-                                                                            toxicity_data.get_toxic_level()))
+                             text='Коэффициент токсичности {0} в этом чате равен {1}'.format(user_key,
+                                                                                             toxicity_data.get_toxic_coefficient()))
 
 
 def __get_user_key(user: User) -> str:
@@ -75,7 +75,7 @@ def __get_user_key(user: User) -> str:
 
 def main():
     persistence = PicklePersistence(filename='db')
-    updater = Updater(token='1052374518:AAFEyQiZwH1U4Sr9OADy04F3n4Pe089r3F0', persistence=persistence, use_context=True)
+    updater = Updater(token='1052374518:AAHWiIfiJa8j-4NsIA7PDPfH3YdrV414tZs', persistence=persistence, use_context=True)
     dispatcher = updater.dispatcher
 
     start_handler = CommandHandler('start', start)

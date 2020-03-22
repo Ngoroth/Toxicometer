@@ -6,5 +6,5 @@ class UserToxicityData:
         self.messages_count: int = 0
         self.total_toxicity: float = 0
 
-    def get_toxic_level(self) -> float:
-        return round((self.total_toxicity / self.messages_count) * 100, 3)
+    def get_toxic_coefficient(self) -> float:
+        return round(self.total_toxicity, 3)
