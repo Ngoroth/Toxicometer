@@ -25,10 +25,10 @@ def analyse(update: Update, context: CallbackContext):
         user_chat_toxicity_data = context.chat_data[__get_user_key(update.message.from_user)]
 
     user_global_toxicity_data.messages_count += 1
-    user_global_toxicity_data.total_toxicity += SentimentAnalyzer.get_sentiment(update.message.text).negative
+    user_global_toxicity_data.total_toxicity += SentimentAnalyzer.get_toxicity(update.message.text)
 
     user_chat_toxicity_data.messages_count += 1
-    user_chat_toxicity_data.total_toxicity += SentimentAnalyzer.get_sentiment(update.message.text).negative
+    user_chat_toxicity_data.total_toxicity += SentimentAnalyzer.get_toxicity(update.message.text)
 
     context.user_data["toxicity"] = user_global_toxicity_data
     context.chat_data[__get_user_key(update.message.from_user)] = user_chat_toxicity_data

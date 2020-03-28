@@ -28,6 +28,14 @@ class SentimentData:
             self.skip = sentiment_data['skip']
 
 
-def get_sentiment(message: str) -> SentimentData:
+def __get_sentiment(message: str) -> SentimentData:
     sentiment = model.predict([message])[0]
     return SentimentData(sentiment)
+
+
+def get_toxicity(message: str) -> float:
+    sentiment = __get_sentiment(message)
+    if sentiment.negative > 0.7:
+        return sentiment.negative
+    else:
+        return 0
