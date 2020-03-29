@@ -70,7 +70,7 @@ def my_toxicity_here(update: Update, context: CallbackContext):
                              .format(user_key, toxicity_data.get_toxic_coefficient()))
 
 
-def lookToxicity(update: Update, context: CallbackContext):
+def look_toxicity(update: Update, context: CallbackContext):
     """Handle the inline query."""
     query = update.inline_query.query
     if query not in context.bot_data:
@@ -111,7 +111,7 @@ def main():
     dispatcher.add_handler(my_toxicity_here_handler)
     analyse_handler = MessageHandler(Filters.text, analyse)
     dispatcher.add_handler(analyse_handler)
-    dispatcher.add_handler(InlineQueryHandler(lookToxicity))
+    dispatcher.add_handler(InlineQueryHandler(look_toxicity))
 
     updater.start_polling()
     updater.idle()
