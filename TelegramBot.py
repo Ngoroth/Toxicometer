@@ -71,7 +71,6 @@ def my_toxicity_here(update: Update, context: CallbackContext):
 
 
 def look_toxicity(update: Update, context: CallbackContext):
-    """Handle the inline query."""
     query = update.inline_query.query
     if query not in context.bot_data:
         update.inline_query.answer([])
@@ -96,8 +95,12 @@ def __get_user_key(user: User) -> str:
         return user.first_name + ' ' + (user.last_name or '')
 
 
+def error(update, context):
+    logger.warning('Update "%s" caused error "%s"', update, context.error)
+
+
 def main():
-    persistence = PicklePersistence(filename='db')
+    persistence = PicklePersistence(filename='Data/db')
     updater = Updater(token='TOKEN', persistence=persistence, use_context=True)
     dispatcher = updater.dispatcher
 
@@ -112,6 +115,8 @@ def main():
     analyse_handler = MessageHandler(Filters.text, analyse)
     dispatcher.add_handler(analyse_handler)
     dispatcher.add_handler(InlineQueryHandler(look_toxicity))
+
+    dispatcher.add_error_handler(error)
 
     updater.start_polling()
     updater.idle()
