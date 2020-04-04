@@ -15,7 +15,11 @@ class SentimentData:
     speech: float
     positive: float
 
-    def __init__(self, sentiment_data: Dict[str, float]):
+    def __init__(self, sentiment_data: Dict[str, float] = {'negative': 0,
+                                                           'neutral': 0,
+                                                           'positive': 0,
+                                                           'speech': 0,
+                                                           'skip': 0}):
         if 'negative' in sentiment_data:
             self.negative = sentiment_data['negative']
         if 'neutral' in sentiment_data:
@@ -27,15 +31,15 @@ class SentimentData:
         if 'skip' in sentiment_data:
             self.skip = sentiment_data['skip']
 
+    def __add__(self, other):
+        self.negative += other.negative
+        self.skip += other.negative
+        self.speech += other.speech
+        self.positive += other.positive
+        self.neutral += other.neutral
+        return self
 
-def __get_sentiment(message: str) -> SentimentData:
+
+def get_sentiment(message: str) -> SentimentData:
     sentiment = model.predict([message])[0]
     return SentimentData(sentiment)
-
-
-def get_toxicity(message: str) -> float:
-    sentiment = __get_sentiment(message)
-    if sentiment.negative > 0.7:
-        return sentiment.negative
-    else:
-        return 0

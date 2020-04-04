@@ -1,4 +1,6 @@
 import logging
+from collections import defaultdict
+from typing import Dict
 
 from telegram import Update, User, InlineQueryResultArticle, ParseMode, InputTextMessageContent
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext, PicklePersistence, \
@@ -12,38 +14,44 @@ logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
 logger = logging.getLogger(__name__)
+bot_info: Dict[str, int] = {'command_completed': 0}
+
+
+def bot_information(update: Update, context: CallbackContext):
+    context.bot.send_message(chat_id=update.effective_chat.id,
+                             text='Выполнено {0} команд'.format(bot_info['command_completed']))
 
 
 def start(update: Update, context: CallbackContext):
     context.bot.send_message(chat_id=update.effective_chat.id,
                              text="Привет! Я - Токсикометр и я буду замерять токсичность вашего чата.")
+    bot_info['command_completed'] += 1
 
 
 def analyse(update: Update, context: CallbackContext):
-    user_chat_toxicity_data = UserToxicityData()
-    user_global_bot_toxicity_data = UserToxicityData()
+    __update_user_toxicity_data(context.chat_data, __get_user_key(update.message.from_user), update.message.text)
+    __update_user_toxicity_data(context.bot_data, __get_user_key(update.message.from_user), update.message.text)
 
-    if __get_user_key(update.message.from_user) in context.chat_data:
-        user_chat_toxicity_data = context.chat_data[__get_user_key(update.message.from_user)]
-    if __get_user_key(update.message.from_user) in context.bot_data:
-        user_global_bot_toxicity_data = context.bot_data[__get_user_key(update.message.from_user)]
 
-    user_chat_toxicity_data.messages_count += 1
-    user_chat_toxicity_data.total_toxicity += SentimentAnalyzer.get_toxicity(update.message.text)
+def __update_user_toxicity_data(data_storage: defaultdict, user_key: str, message_text: str):
+    user_toxicity_data = UserToxicityData()
 
-    user_global_bot_toxicity_data.messages_count += 1
-    user_global_bot_toxicity_data.total_toxicity += SentimentAnalyzer.get_toxicity(update.message.text)
+    if user_key in data_storage:
+        user_toxicity_data = data_storage[user_key]
 
-    context.chat_data[__get_user_key(update.message.from_user)] = user_chat_toxicity_data
-    context.bot_data[__get_user_key(update.message.from_user)] = user_global_bot_toxicity_data
+    user_toxicity_data.messages_count += 1
+    user_toxicity_data.total_sentiment_data += SentimentAnalyzer.get_sentiment(message_text)
+
+    data_storage[user_key] = user_toxicity_data
 
 
 def get_top_toxics(update: Update, context: CallbackContext):
     text = 'Самые токсичные здесь: \n'
-    for i in sorted(context.chat_data.items(), key=lambda ud: ud[1].get_toxic_coefficient())[-3:]:
-        text += i[0] + ' {0}\n'.format(i[1].get_toxic_coefficient())
+    for i in sorted(context.chat_data.items(), key=lambda ud: ud[1].get_toxicity())[-3:]:
+        text += '🤮 ' + i[0] + ' {0}\n'.format(i[1].get_toxicity())
     context.bot.send_message(chat_id=update.effective_chat.id,
                              text=text)
+    bot_info['command_completed'] += 1
 
 
 def my_toxicity(update: Update, context: CallbackContext):
@@ -52,10 +60,20 @@ def my_toxicity(update: Update, context: CallbackContext):
         context.bot.send_message(chat_id=update.effective_chat.id,
                                  text='Общий коэффициент токсичности {0} еще не рассчитан'.format(user_key))
         return
-    toxicity_data = context.bot_data[user_key]
+    toxicity_data: UserToxicityData = context.bot_data[user_key]
     context.bot.send_message(chat_id=update.effective_chat.id,
-                             text='Общий коэффициент токсичности {0} равен {1}'.format(user_key,
-                                                                                       toxicity_data.get_toxic_coefficient()))
+                             text='<b>{0}</b> (глобальные данные)\r\n'
+                                  '🤢 <u>Токсичность:</u> {1}\r\n'
+                                  '☹ Негативность: {2}\r\n'
+                                  '😐 Нейтральность: {3}\r\n'
+                                  '😃 Позитивность: {4}'
+                             .format(user_key,
+                                     toxicity_data.get_toxicity(),
+                                     toxicity_data.get_sentiment_data_coefficients().negative,
+                                     toxicity_data.get_sentiment_data_coefficients().neutral,
+                                     toxicity_data.get_sentiment_data_coefficients().positive),
+                             parse_mode=ParseMode.HTML)
+    bot_info['command_completed'] += 1
 
 
 def my_toxicity_here(update: Update, context: CallbackContext):
@@ -64,10 +82,20 @@ def my_toxicity_here(update: Update, context: CallbackContext):
         context.bot.send_message(chat_id=update.effective_chat.id,
                                  text='Коэффициент токсичности {0} в этом чате еще не рассчитан'.format(user_key))
         return
-    toxicity_data = context.chat_data[user_key]
+    toxicity_data: UserToxicityData = context.chat_data[user_key]
     context.bot.send_message(chat_id=update.effective_chat.id,
-                             text='Коэффициент токсичности {0} в этом чате равен {1}'
-                             .format(user_key, toxicity_data.get_toxic_coefficient()))
+                             text='<b>{0}</b> (данные этого чата)\r\n'
+                                  '🤢 <u>Токсичность:</u> {1}\r\n'
+                                  '☹ Негативность: {2}\r\n'
+                                  '😐 Нейтральность: {3}\r\n'
+                                  '😃 Позитивность: {4}'
+                             .format(user_key,
+                                     toxicity_data.get_toxicity(),
+                                     toxicity_data.get_sentiment_data_coefficients().negative,
+                                     toxicity_data.get_sentiment_data_coefficients().neutral,
+                                     toxicity_data.get_sentiment_data_coefficients().positive),
+                             parse_mode=ParseMode.HTML)
+    bot_info['command_completed'] += 1
 
 
 def look_toxicity(update: Update, context: CallbackContext):
@@ -80,9 +108,9 @@ def look_toxicity(update: Update, context: CallbackContext):
     results = [
         InlineQueryResultArticle(
             id=uuid4(),
-            title='Токсичность {0} равна {1}'.format(query, toxicity_data.get_toxic_coefficient()),
+            title='Токсичность {0} равна {1}'.format(query, toxicity_data.get_toxicity()),
             input_message_content=InputTextMessageContent(
-                'Токсичность {0} равна {1}, учтено {2} сообщений'.format(query, toxicity_data.get_toxic_coefficient(),
+                'Токсичность {0} равна {1}, учтено {2} сообщений'.format(query, toxicity_data.get_toxicity(),
                                                                          toxicity_data.messages_count)))]
 
     update.inline_query.answer(results)
@@ -112,6 +140,7 @@ def main():
     dispatcher.add_handler(my_toxicity_handler)
     my_toxicity_here_handler = CommandHandler('my_toxicity_here', my_toxicity_here)
     dispatcher.add_handler(my_toxicity_here_handler)
+    dispatcher.add_handler(CommandHandler('bot_information', bot_information))
     analyse_handler = MessageHandler(Filters.text, analyse)
     dispatcher.add_handler(analyse_handler)
     dispatcher.add_handler(InlineQueryHandler(look_toxicity))
