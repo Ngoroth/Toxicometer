@@ -22,7 +22,7 @@ class SentimentData:
                                                            'speech': 0,
                                                            'skip': 0}):
         if 'negative' in sentiment_data:
-            if sentiment_data['negative'] > 0.21:
+            if sentiment_data['negative'] > 0.31:
                 self.negative = sentiment_data['negative']
                 self.low_negative = 0
             else:

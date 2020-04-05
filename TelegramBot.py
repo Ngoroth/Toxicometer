@@ -72,10 +72,10 @@ def send_toxicity(update: Update, context: CallbackContext, data_storage: defaul
     context.bot.send_message(chat_id=update.effective_chat.id,
                              text='<b>{0}</b> {1}\r\n'
                                   '🤢 <u>Токсичность:</u> {2}\r\n'
-                                  '☹ Негативность: {3}%\r\n'
-                                  '😐 Нейтральность: {4}%\r\n'
-                                  '😃 Позитивность: {5}%\r\n'
-                                  '🧐 Иное: {6}%'
+                                  '☹ Негативность: {3}\r\n'
+                                  '😐 Нейтральность: {4}\r\n'
+                                  '😃 Позитивность: {5}\r\n'
+                                  '🧐 Иное: {6}'
                              .format(user_key,
                                      title,
                                      toxicity_data.get_toxicity(),
