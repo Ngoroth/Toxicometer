@@ -55,45 +55,34 @@ def get_top_toxics(update: Update, context: CallbackContext):
 
 
 def my_toxicity(update: Update, context: CallbackContext):
-    user_key = __get_user_key(update.message.from_user)
-    if user_key not in context.bot_data:
-        context.bot.send_message(chat_id=update.effective_chat.id,
-                                 text='Общий коэффициент токсичности {0} еще не рассчитан'.format(user_key))
-        return
-    toxicity_data: UserToxicityData = context.bot_data[user_key]
-    context.bot.send_message(chat_id=update.effective_chat.id,
-                             text='<b>{0}</b> (глобальные данные)\r\n'
-                                  '🤢 <u>Токсичность:</u> {1}\r\n'
-                                  '☹ Негативность: {2}\r\n'
-                                  '😐 Нейтральность: {3}\r\n'
-                                  '😃 Позитивность: {4}'
-                             .format(user_key,
-                                     toxicity_data.get_toxicity(),
-                                     toxicity_data.get_sentiment_data_coefficients().negative,
-                                     toxicity_data.get_sentiment_data_coefficients().neutral,
-                                     toxicity_data.get_sentiment_data_coefficients().positive),
-                             parse_mode=ParseMode.HTML)
-    bot_info['command_completed'] += 1
+    send_toxicity(update, context, context.bot_data, '(глобальные данные)')
 
 
 def my_toxicity_here(update: Update, context: CallbackContext):
+    send_toxicity(update, context, context.chat_data, '(данные этого чата)')
+
+
+def send_toxicity(update: Update, context: CallbackContext, data_storage: defaultdict, title: str):
     user_key = __get_user_key(update.message.from_user)
-    if update.message.from_user.username not in context.chat_data:
+    if user_key not in data_storage:
         context.bot.send_message(chat_id=update.effective_chat.id,
                                  text='Коэффициент токсичности {0} в этом чате еще не рассчитан'.format(user_key))
         return
-    toxicity_data: UserToxicityData = context.chat_data[user_key]
+    toxicity_data: UserToxicityData = data_storage[user_key]
     context.bot.send_message(chat_id=update.effective_chat.id,
-                             text='<b>{0}</b> (данные этого чата)\r\n'
-                                  '🤢 <u>Токсичность:</u> {1}\r\n'
-                                  '☹ Негативность: {2}\r\n'
-                                  '😐 Нейтральность: {3}\r\n'
-                                  '😃 Позитивность: {4}'
+                             text='<b>{0}</b> {1}\r\n'
+                                  '🤢 <u>Токсичность:</u> {2}\r\n'
+                                  '☹ Негативность: {3}%\r\n'
+                                  '😐 Нейтральность: {4}%\r\n'
+                                  '😃 Позитивность: {5}%\r\n'
+                                  '🧐 Иное: {6}%'
                              .format(user_key,
+                                     title,
                                      toxicity_data.get_toxicity(),
                                      toxicity_data.get_sentiment_data_coefficients().negative,
                                      toxicity_data.get_sentiment_data_coefficients().neutral,
-                                     toxicity_data.get_sentiment_data_coefficients().positive),
+                                     toxicity_data.get_sentiment_data_coefficients().positive,
+                                     toxicity_data.get_sentiment_data_coefficients().other),
                              parse_mode=ParseMode.HTML)
     bot_info['command_completed'] += 1
 

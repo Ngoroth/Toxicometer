@@ -18,9 +18,10 @@ class UserToxicityData:
         else:
             return 0
 
-    def get_sentiment_data_coefficients(self) -> namedtuple('sentiment_percents', ['negative', 'neutral', 'positive']):
-        sentiment_percents = namedtuple('sentiment_percents', ['negative', 'neutral', 'positive'])
-        negative = int(round((self.total_sentiment_data.negative / self.messages_count) * 100))
+    def get_sentiment_data_coefficients(self) -> namedtuple('sentiment_percents', ['negative', 'neutral', 'positive', 'other']):
+        sentiment_percents = namedtuple('sentiment_percents', ['negative', 'neutral', 'positive', 'other'])
+        negative = int(round(((self.total_sentiment_data.negative + self.total_sentiment_data.low_negative) / self.messages_count) * 100))
         neutral = int(round((self.total_sentiment_data.neutral / self.messages_count) * 100))
         positive = int(round((self.total_sentiment_data.positive / self.messages_count) * 100))
-        return sentiment_percents(negative, neutral, positive)
+        other = 100 - negative - neutral - positive
+        return sentiment_percents(negative, neutral, positive, other)
