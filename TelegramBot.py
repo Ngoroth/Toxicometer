@@ -110,6 +110,9 @@ def look_toxicity(update: Update, context: CallbackContext):
 
 
 def chat_mood(update: Update, context: CallbackContext):
+    if chat_key not in context.chat_data:
+        context.chat_data[chat_key] = ToxicityData()
+
     toxicity_data: ToxicityData = context.chat_data[chat_key]
 
     if toxicity_data.changed_at < datetime.now() - timedelta(hours=2):
