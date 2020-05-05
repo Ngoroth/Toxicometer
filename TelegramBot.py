@@ -57,9 +57,9 @@ def get_top_toxics(update: Update, context: CallbackContext):
         if i[0] == chat_key:
             continue
         text += '🤮 ' + i[0] + ' {0}\n'.format(i[1].get_toxicity())
-        if count < 3:
-            break
         count += 1
+        if count == 3:
+            break
 
     context.bot.send_message(chat_id=update.effective_chat.id,
                              text=text)
