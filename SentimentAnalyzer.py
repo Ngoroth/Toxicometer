@@ -9,7 +9,7 @@ model = FastTextSocialNetworkModel(tokenizer=tokenizer)
 
 
 class SentimentData:
-    negative: float
+    high_negative: float
     low_negative: float
     neutral: float
     skip: float
@@ -22,11 +22,11 @@ class SentimentData:
                                                            'speech': 0,
                                                            'skip': 0}):
         if 'negative' in sentiment_data:
-            if sentiment_data['negative'] > 0.31:
-                self.negative = sentiment_data['negative']
+            if sentiment_data['negative'] > 0.59:
+                self.high_negative = sentiment_data['negative']
                 self.low_negative = 0
             else:
-                self.negative = 0
+                self.high_negative = 0
                 self.low_negative = sentiment_data['negative']
         if 'neutral' in sentiment_data:
             self.neutral = sentiment_data['neutral']
@@ -38,13 +38,16 @@ class SentimentData:
             self.skip = sentiment_data['skip']
 
     def __add__(self, other):
-        self.negative += other.negative
+        self.high_negative += other.high_negative
         self.low_negative += other.low_negative
         self.skip += other.skip
         self.speech += other.speech
         self.positive += other.positive
         self.neutral += other.neutral
         return self
+
+    def get_negative(self) -> float:
+        return self.low_negative + self.high_negative
 
 
 def get_sentiment(message: str) -> SentimentData:
