@@ -51,8 +51,16 @@ def __update_toxicity_data(data_storage: defaultdict, key: str, message_text: st
 
 def get_top_toxics(update: Update, context: CallbackContext):
     text = 'Самые токсичные здесь: \n'
-    for i in sorted(context.chat_data.items(), key=lambda ud: ud[1].get_toxicity())[-3:]:
+
+    count: int = 0
+    for i in sorted(context.chat_data.items(), key=lambda ud: ud[1].get_toxicity()):
+        if i[0] == chat_key:
+            continue
         text += '🤮 ' + i[0] + ' {0}\n'.format(i[1].get_toxicity())
+        if count < 3:
+            break
+        count += 1
+
     context.bot.send_message(chat_id=update.effective_chat.id,
                              text=text)
     bot_info['command_completed'] += 1
