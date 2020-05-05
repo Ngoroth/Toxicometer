@@ -53,7 +53,7 @@ def get_top_toxics(update: Update, context: CallbackContext):
     text = 'Самые токсичные здесь: \n'
 
     count: int = 0
-    for i in sorted(context.chat_data.items(), key=lambda ud: ud[1].get_toxicity()):
+    for i in sorted(context.chat_data.items(), key=lambda ud: ud[1].get_toxicity(), reverse=True):
         if i[0] == chat_key:
             continue
         text += '🤮 ' + i[0] + ' {0}\n'.format(i[1].get_toxicity())
